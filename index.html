@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saudi Visa Application Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Barcode Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
+    <!-- LZ String Library for compression -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+</head>
+<body>
+
+    <!-- Generator View -->
+    <div id="generator-view" class="container">
+        <header class="app-header">
+            <h1>Visa Application Generator</h1>
+            <p>Fill out the details below to generate a scannable QR code and dynamic application form.</p>
+        </header>
+
+        <form id="visa-form">
+            <div class="section-title">Application Info</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Application Number</label>
+                    <input type="text" id="in_aN" value="E812204991" required>
+                </div>
+                <div class="form-group">
+                    <label>Application Date</label>
+                    <input type="text" id="in_aD" value="2026/02/03" required>
+                </div>
+                <div class="form-group full-width">
+                    <label>Upload Applicant Photo</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="in_pFile" accept="image/*" required>
+                        <p class="file-info" style="font-size: 12px; color: #64748b; margin-top: 5px;">Image will be uploaded to cloud to maintain original high quality.</p>
+                        <p id="upload-status" style="font-size: 13px; font-weight: bold; margin-top: 5px; display: none;"></p>
+                        <img id="photo-preview" src="" style="display:none; max-width:100px; max-height: 120px; object-fit: cover; margin-top:10px; border: 1px solid #e2e8f0; border-radius:4px;">
+                        <input type="hidden" id="in_pU_base64" value="">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-title">Visa Details</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Saudi Mission in</label>
+                    <input type="text" id="in_m" value="Dhaka">
+                </div>
+                <div class="form-group">
+                    <label>Visa Type</label>
+                    <input type="text" id="in_vT" value="Work">
+                </div>
+                <div class="form-group">
+                    <label>Number of Entries</label>
+                    <input type="text" id="in_e" value="Single - 90 Day">
+                </div>
+                <div class="form-group">
+                    <label>Sponsor Name</label>
+                    <input type="text" id="in_sN" value="0">
+                </div>
+            </div>
+
+            <div class="section-title">Applicant Details</div>
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label>Arabic Name (Leave blank if none)</label>
+                    <input type="text" id="in_a" value="">
+                </div>
+                <div class="form-group full-width">
+                    <label>Full Name</label>
+                    <input type="text" id="in_n" value="MD YEASIN">
+                </div>
+                <div class="form-group">
+                    <label>Passport Number</label>
+                    <input type="text" id="in_pN" value="A05525798">
+                </div>
+                <div class="form-group">
+                    <label>Passport Type</label>
+                    <input type="text" id="in_pT" value="Normal">
+                </div>
+                <div class="form-group">
+                    <label>Date of Expiry</label>
+                    <input type="text" id="in_dE" value="21/11/2032">
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <input type="text" id="in_dB" value="08/12/1998">
+                </div>
+                <div class="form-group">
+                    <label>Place of Birth</label>
+                    <input type="text" id="in_pB" value="NOAKHALI">
+                </div>
+                <div class="form-group">
+                    <label>Current Nationality</label>
+                    <input type="text" id="in_cN" value="Bangladesh">
+                </div>
+                <div class="form-group">
+                    <label>Gender</label>
+                    <input type="text" id="in_g" value="Male">
+                </div>
+                <div class="form-group">
+                    <label>Occupation</label>
+                    <input type="text" id="in_o" value="Port Worker">
+                </div>
+                <div class="form-group full-width">
+                    <label>Purpose</label>
+                    <input type="text" id="in_p" value="WORK">
+                </div>
+            </div>
+            
+            <button type="submit" class="generate-btn">Generate Webpage & QR Code</button>
+        </form>
+
+        <div id="result-section" class="hidden">
+            <h2>Success! Your Visa page is ready.</h2>
+            <p>Scan the QR code from another device, or copy the link below.</p>
+            <div id="qrcode"></div>
+            <a id="generated-link" href="#" target="_blank">View Application Form Document</a>
+        </div>
+    </div>
+
+    <!-- Document View -->
+    <div id="document-view" class="hidden">
+        <div class="document-container">
+            <div class="doc-header-top">
+                Entered application
+            </div>
+            <div class="doc-header-main">
+                <div class="doc-logo">
+                    <img src="logo/logo.png" alt="Logo" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Emblem_of_Saudi_Arabia.svg/200px-Emblem_of_Saudi_Arabia.svg.png'">
+                </div>
+                <div class="doc-photo">
+                    <img id="out_photo" src="" alt="Applicant Photo">
+                </div>
+                <div class="doc-barcode-section">
+                    <div class="doc-app-no">Application Number: <span id="out_aN_text"></span></div>
+                    <svg id="out_barcode"></svg>
+                    <div class="doc-app-date">Application Date: <span id="out_aD"></span></div>
+                </div>
+            </div>
+
+            <div class="doc-body">
+                <div class="doc-row">
+                    <div class="doc-field">
+                        <div class="doc-label">Saudi Mission in</div>
+                        <div class="doc-value" id="out_m"></div>
+                    </div>
+                    <div class="doc-field">
+                        <div class="doc-label">Visa Type</div>
+                        <div class="doc-value" id="out_vT"></div>
+                    </div>
+                </div>
+                <div class="doc-row">
+                    <div class="doc-field">
+                        <div class="doc-label">Number of Entries</div>
+                        <div class="doc-value" id="out_e"></div>
+                    </div>
+                    <div class="doc-field">
+                        <div class="doc-label">Sponsor Name</div>
+                        <div class="doc-value" id="out_sN"></div>
+                    </div>
+                </div>
+                <div class="doc-row">
+                    <div class="doc-field full">
+                        <div class="doc-label">Arabic Name</div>
+                        <div class="doc-value" id="out_a"></div>
+                    </div>
+                </div>
+                <div class="doc-row">
+                    <div class="doc-field full">
+                        <div class="doc-label">Name</div>
+                        <div class="doc-value" id="out_n"></div>
+                    </div>
+                </div>
+                <div class="doc-row">
+                    <div class="doc-field">
+                        <div class="doc-label">Passport Number</div>
+                        <div class="doc-value" id="out_pN"></div>
+                    </div>
+                    <div class="doc-field">
+                        <div class="doc-label">Passport Type</div>
+                        <div class="doc-value" id="out_pT"></div>
+                    </div>
+                </div>
+                <div class="doc-row">
+                    <div class="doc-field">
+                        <div class="doc-label">Date of Expiry</div>
+                        <div class="doc-value" id="out_dE"></div>
+                    </div>
+                    <div class="doc-field">
+                        <div class="doc-label">Date of Birth</div>
+                        <div class="doc-value" id="out_dB"></div>
+                    </div>
+                </div>
+                <div class="doc-row">
+                    <div class="doc-field">
+                        <div class="doc-label">Place of Birth</div>
+                        <div class="doc-value" id="out_pB"></div>
+                    </div>
+                    <div class="doc-field">
+                        <div class="doc-label">Current Nationality</div>
+                        <div class="doc-value" id="out_cN"></div>
+                    </div>
+                </div>
+                <div class="doc-row">
+                    <div class="doc-field">
+                        <div class="doc-label">Gender</div>
+                        <div class="doc-value" id="out_g"></div>
+                    </div>
+                    <div class="doc-field">
+                        <div class="doc-label">Occupation</div>
+                        <div class="doc-value" id="out_o"></div>
+                    </div>
+                </div>
+                <div class="doc-row">
+                    <div class="doc-field half">
+                        <div class="doc-label">Purpose</div>
+                        <div class="doc-value" id="out_p"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="doc-footer">
+                I, the undersigned, hereby agree to have my fingerprint & iris data (biometrics) captured as part of the application procedure for an entry visa to the Kingdom of Saudi Arabia. I further agree and declare as follows:
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
